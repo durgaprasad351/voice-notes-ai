@@ -9,8 +9,29 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { useApp, TranscriptionMode } from '../context/AppContext';
+import { useApp, TranscriptionMode, LLMMode } from '../context/AppContext';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
+
+const LLM_MODES: { key: LLMMode; label: string; description: string; icon: string }[] = [
+  { 
+    key: 'local', 
+    label: 'Local Only (Free)', 
+    description: 'On-device pattern matching. Free, private, offline.',
+    icon: '📱',
+  },
+  { 
+    key: 'openai', 
+    label: 'OpenAI (Best Quality)', 
+    description: 'GPT-4o-mini for best extraction accuracy.',
+    icon: '☁️',
+  },
+  { 
+    key: 'hybrid', 
+    label: 'Hybrid (Recommended)', 
+    description: 'Local for simple, OpenAI for complex queries.',
+    icon: '🔄',
+  },
+];
 
 const TRANSCRIPTION_MODES: { key: TranscriptionMode; label: string; description: string; icon: string }[] = [
   { 
@@ -34,7 +55,7 @@ const TRANSCRIPTION_MODES: { key: TranscriptionMode; label: string; description:
 ];
 
 export default function SettingsScreen() {
-  const { apiKey, setApiKey, transcriptionMode, setTranscriptionMode } = useApp();
+  const { apiKey, setApiKey, transcriptionMode, setTranscriptionMode, llmMode, setLLMMode } = useApp();
   const [showApiKey, setShowApiKey] = useState(false);
   const [editingKey, setEditingKey] = useState(false);
   const [newApiKey, setNewApiKey] = useState('');
@@ -101,6 +122,45 @@ export default function SettingsScreen() {
                     transcriptionMode === mode.key && styles.radioOuterActive,
                   ]}>
                     {transcriptionMode === mode.key && (
+                      <View style={styles.radioInner} />
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+        
+        {/* LLM Mode Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Entity Extraction (LLM)</Text>
+          
+          <View style={styles.card}>
+            {LLM_MODES.map((mode) => (
+              <TouchableOpacity
+                key={mode.key}
+                style={[
+                  styles.modeOption,
+                  llmMode === mode.key && styles.modeOptionActive,
+                ]}
+                onPress={() => setLLMMode(mode.key)}
+              >
+                <View style={styles.modeHeader}>
+                  <Text style={styles.modeIcon}>{mode.icon}</Text>
+                  <View style={styles.modeTextContainer}>
+                    <Text style={[
+                      styles.modeLabel,
+                      llmMode === mode.key && styles.modeLabelActive,
+                    ]}>
+                      {mode.label}
+                    </Text>
+                    <Text style={styles.modeDescription}>{mode.description}</Text>
+                  </View>
+                  <View style={[
+                    styles.radioOuter,
+                    llmMode === mode.key && styles.radioOuterActive,
+                  ]}>
+                    {llmMode === mode.key && (
                       <View style={styles.radioInner} />
                     )}
                   </View>
@@ -192,7 +252,7 @@ export default function SettingsScreen() {
           <View style={styles.card}>
             <View style={styles.aboutItem}>
               <Text style={styles.aboutLabel}>Version</Text>
-              <Text style={styles.aboutValue}>1.1.0</Text>
+              <Text style={styles.aboutValue}>1.3.0</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.aboutItem}>
@@ -204,8 +264,11 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.divider} />
             <View style={styles.aboutItem}>
-              <Text style={styles.aboutLabel}>AI Model</Text>
-              <Text style={styles.aboutValue}>GPT-4o-mini</Text>
+              <Text style={styles.aboutLabel}>Entity Extraction</Text>
+              <Text style={styles.aboutValue}>
+                {llmMode === 'local' ? 'Local (Free)' : 
+                 llmMode === 'openai' ? 'OpenAI GPT-4o-mini' : 'Hybrid'}
+              </Text>
             </View>
           </View>
         </View>

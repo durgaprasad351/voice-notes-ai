@@ -9,14 +9,17 @@ import {
   getEntitiesByType,
   deleteEntity,
 } from '../services/database';
-import { initOpenAI, processRecording, extractEntities, transcribeAudio } from '../services/openai';
+import { initOpenAI, transcribeAudio, extractEntities as extractWithOpenAI } from '../services/openai';
 import { setupAudio, startRecording, stopRecording, generateEntityId } from '../services/audio';
+import { fallbackExtraction } from '../services/localLLM';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_KEY_STORAGE = 'openai_api_key';
 const TRANSCRIPTION_MODE_KEY = 'transcription_mode';
+const LLM_MODE_KEY = 'llm_mode';
 
 export type TranscriptionMode = 'on-device' | 'whisper' | 'hybrid';
+export type LLMMode = 'local' | 'openai' | 'hybrid';
 
 interface AppContextType {
   // State
@@ -31,10 +34,12 @@ interface AppContextType {
   error: string | null;
   liveTranscript: string;
   transcriptionMode: TranscriptionMode;
+  llmMode: LLMMode;
   
   // Actions
   setApiKey: (key: string) => Promise<void>;
   setTranscriptionMode: (mode: TranscriptionMode) => Promise<void>;
+  setLLMMode: (mode: LLMMode) => Promise<void>;
   refreshData: () => Promise<void>;
   handleStartRecording: () => Promise<void>;
   handleStopRecording: () => Promise<void>;
@@ -58,6 +63,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [liveTranscript, setLiveTranscript] = useState('');
   const [transcriptionMode, setTranscriptionModeState] = useState<TranscriptionMode>('hybrid');
+  const [llmMode, setLLMModeState] = useState<LLMMode>('openai');
   
   // Initialize app
   useEffect(() => {
@@ -70,9 +76,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await setupAudio();
         
         // Load saved settings
-        const [savedKey, savedMode] = await Promise.all([
+        const [savedKey, savedTransMode, savedLLMMode] = await Promise.all([
           AsyncStorage.getItem(API_KEY_STORAGE),
           AsyncStorage.getItem(TRANSCRIPTION_MODE_KEY),
+          AsyncStorage.getItem(LLM_MODE_KEY),
         ]);
         
         if (savedKey) {
@@ -84,8 +91,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
           initOpenAI();
         }
         
-        if (savedMode) {
-          setTranscriptionModeState(savedMode as TranscriptionMode);
+        if (savedTransMode) {
+          setTranscriptionModeState(savedTransMode as TranscriptionMode);
+        }
+        
+        if (savedLLMMode) {
+          setLLMModeState(savedLLMMode as LLMMode);
         }
         
         // Load initial data
@@ -119,6 +130,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTranscriptionModeState(mode);
   }, []);
   
+  // Save and set LLM mode
+  const setLLMMode = useCallback(async (mode: LLMMode) => {
+    await AsyncStorage.setItem(LLM_MODE_KEY, mode);
+    setLLMModeState(mode);
+  }, []);
+  
   // Refresh data from database
   const refreshData = useCallback(async () => {
     try {
@@ -137,6 +154,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const handleTranscriptUpdate = useCallback((text: string) => {
     setLiveTranscript(text);
   }, []);
+  
+  // Extract entities based on LLM mode
+  const extractEntities = useCallback(async (transcript: string): Promise<LLMExtractionResult> => {
+    if (llmMode === 'local') {
+      // Use local pattern-based extraction (will be upgraded to on-device LLM)
+      console.log('Using local extraction');
+      return fallbackExtraction(transcript);
+    } else if (llmMode === 'openai') {
+      // Use OpenAI
+      console.log('Using OpenAI extraction');
+      return await extractWithOpenAI(transcript);
+    } else {
+      // Hybrid: try local first for simple cases, OpenAI for complex
+      console.log('Using hybrid extraction');
+      const localResult = fallbackExtraction(transcript);
+      
+      // If local found something meaningful, use it
+      if (localResult.entities.length > 0 && localResult.entities[0].type !== 'note') {
+        console.log('Hybrid: using local result');
+        return localResult;
+      }
+      
+      // Otherwise use OpenAI for better extraction
+      try {
+        console.log('Hybrid: using OpenAI for better extraction');
+        return await extractWithOpenAI(transcript);
+      } catch (e) {
+        console.log('Hybrid: OpenAI failed, using local');
+        return localResult;
+      }
+    }
+  }, [llmMode]);
   
   // Start recording
   const handleStartRecording = useCallback(async () => {
@@ -157,11 +206,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   // Stop recording and process
   const handleStopRecording = useCallback(async () => {
-    if (!apiKey) {
-      setError('Please set your OpenAI API key first');
-      return;
-    }
-    
     try {
       setIsRecording(false);
       setIsProcessing(true);
@@ -195,7 +239,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       }
       
-      // Extract entities using GPT
+      // Extract entities using configured LLM mode
       const extraction = await extractEntities(transcript);
       
       setLastTranscript(transcript);
@@ -235,7 +279,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsProcessing(false);
     }
-  }, [apiKey, refreshData, transcriptionMode]);
+  }, [refreshData, transcriptionMode, extractEntities]);
   
   // Complete an entity
   const completeEntity = useCallback(async (id: string) => {
@@ -283,8 +327,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         error,
         liveTranscript,
         transcriptionMode,
+        llmMode,
         setApiKey,
         setTranscriptionMode,
+        setLLMMode,
         refreshData,
         handleStartRecording,
         handleStopRecording,
