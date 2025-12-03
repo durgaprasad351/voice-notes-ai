@@ -14,7 +14,6 @@ import { useApp } from '../context/AppContext';
 import { RecordButton } from '../components/RecordButton';
 import { UpcomingSection } from '../components/UpcomingSection';
 import { CategoryGrid } from '../components/CategoryGrid';
-import { ApiKeyModal } from '../components/ApiKeyModal';
 import { ProcessingResult } from '../components/ProcessingResult';
 import { colors, spacing, typography } from '../constants/theme';
 import { EntityType } from '../types';
@@ -27,27 +26,17 @@ export default function HomeScreen() {
     isProcessing,
     entities,
     upcomingItems,
-    apiKey,
     lastTranscript,
     lastExtraction,
     error,
     liveTranscript,
-    setApiKey,
     handleStartRecording,
     handleStopRecording,
     completeEntity,
     clearError,
   } = useApp();
   
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  
-  // Show API key modal if not set
-  useEffect(() => {
-    if (isInitialized && !apiKey) {
-      setShowApiKeyModal(true);
-    }
-  }, [isInitialized, apiKey]);
   
   // Show result when processing completes
   useEffect(() => {
@@ -87,22 +76,11 @@ export default function HomeScreen() {
   
   // Handle record button press
   const handleRecordPress = () => {
-    if (!apiKey) {
-      setShowApiKeyModal(true);
-      return;
-    }
-    
     if (isRecording) {
       handleStopRecording();
     } else {
       handleStartRecording();
     }
-  };
-  
-  // Handle API key submit
-  const handleApiKeySubmit = async (key: string) => {
-    await setApiKey(key);
-    setShowApiKeyModal(false);
   };
   
   if (!isInitialized) {
@@ -150,17 +128,9 @@ export default function HomeScreen() {
           isRecording={isRecording}
           isProcessing={isProcessing}
           onPress={handleRecordPress}
-          disabled={!apiKey}
           liveTranscript={liveTranscript}
         />
       </View>
-      
-      {/* API Key Modal */}
-      <ApiKeyModal
-        visible={showApiKeyModal}
-        onSubmit={handleApiKeySubmit}
-        onClose={() => setShowApiKeyModal(false)}
-      />
       
       {/* Processing Result Modal */}
       <Modal
@@ -255,4 +225,3 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
 });
-
