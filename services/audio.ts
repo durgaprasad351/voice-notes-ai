@@ -1,16 +1,26 @@
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system/legacy';
-import { Recording } from '../types';
+import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 
 let currentRecording: Audio.Recording | null = null;
+let speechRecognitionActive = false;
+let transcriptAccumulator = '';
 
 // Request permissions and configure audio
 export async function setupAudio(): Promise<boolean> {
   try {
-    const { granted } = await Audio.requestPermissionsAsync();
-    if (!granted) {
+    // Request audio permission
+    const { granted: audioGranted } = await Audio.requestPermissionsAsync();
+    if (!audioGranted) {
       console.error('Audio permission not granted');
       return false;
+    }
+    
+    // Request speech recognition permission
+    try {
+      await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    } catch (e) {
+      console.log('Speech recognition permissions not available (Expo Go):', e);
     }
     
     await Audio.setAudioModeAsync({
@@ -27,27 +37,76 @@ export async function setupAudio(): Promise<boolean> {
   }
 }
 
-// Start recording
-export async function startRecording(): Promise<void> {
+// Start recording with optional real-time transcription
+export async function startRecording(
+  onTranscriptUpdate?: (text: string, isFinal: boolean) => void
+): Promise<void> {
   try {
     // Stop any existing recording
     if (currentRecording) {
       await stopRecording();
     }
     
+    transcriptAccumulator = '';
+    
+    // Start audio recording (for backup/Whisper fallback)
     const { recording } = await Audio.Recording.createAsync(
       Audio.RecordingOptionsPresets.HIGH_QUALITY
     );
-    
     currentRecording = recording;
+    
+    // Try to start real-time speech recognition
+    if (onTranscriptUpdate) {
+      try {
+        // Set up listeners
+        const resultSub = ExpoSpeechRecognitionModule.addListener('result', (event) => {
+          if (event.results && event.results.length > 0) {
+            const result = event.results[0];
+            const transcript = result.transcript || '';
+            const isFinal = result.isFinal || false;
+            
+            if (isFinal && transcript) {
+              transcriptAccumulator += transcript + ' ';
+              onTranscriptUpdate(transcriptAccumulator.trim(), false);
+            } else if (transcript) {
+              onTranscriptUpdate(transcriptAccumulator + transcript, false);
+            }
+          }
+        });
+        
+        const errorSub = ExpoSpeechRecognitionModule.addListener('error', (event) => {
+          console.log('Speech recognition error:', event.error);
+          // Don't fail - we have audio recording as backup
+        });
+        
+        // Start speech recognition
+        ExpoSpeechRecognitionModule.start({
+          lang: 'en-US',
+          interimResults: true,
+          maxAlternatives: 1,
+          continuous: true,
+          requiresOnDeviceRecognition: false,
+          addsPunctuation: true,
+        });
+        
+        speechRecognitionActive = true;
+      } catch (e) {
+        console.log('Real-time speech recognition not available:', e);
+        // Continue without real-time transcription - will use Whisper later
+      }
+    }
   } catch (error) {
     console.error('Failed to start recording:', error);
     throw error;
   }
 }
 
-// Stop recording and return the URI
-export async function stopRecording(): Promise<{ uri: string; duration: number } | null> {
+// Stop recording and return the URI + transcript
+export async function stopRecording(): Promise<{ 
+  uri: string; 
+  duration: number;
+  onDeviceTranscript: string | null;
+} | null> {
   if (!currentRecording) {
     return null;
   }
@@ -57,11 +116,24 @@ export async function stopRecording(): Promise<{ uri: string; duration: number }
     const status = await currentRecording.getStatusAsync();
     const duration = status.durationMillis || 0;
     
-    // Now stop and unload
+    // Stop speech recognition first
+    let onDeviceTranscript: string | null = null;
+    if (speechRecognitionActive) {
+      try {
+        ExpoSpeechRecognitionModule.stop();
+        onDeviceTranscript = transcriptAccumulator.trim() || null;
+        speechRecognitionActive = false;
+      } catch (e) {
+        console.log('Error stopping speech recognition:', e);
+      }
+    }
+    
+    // Now stop audio recording
     await currentRecording.stopAndUnloadAsync();
     const uri = currentRecording.getURI();
     
     currentRecording = null;
+    transcriptAccumulator = '';
     
     if (!uri) {
       return null;
@@ -70,10 +142,13 @@ export async function stopRecording(): Promise<{ uri: string; duration: number }
     return {
       uri,
       duration,
+      onDeviceTranscript,
     };
   } catch (error) {
     console.error('Failed to stop recording:', error);
     currentRecording = null;
+    speechRecognitionActive = false;
+    transcriptAccumulator = '';
     throw error;
   }
 }
@@ -104,6 +179,16 @@ export async function cancelRecording(): Promise<void> {
   }
   
   try {
+    // Stop speech recognition
+    if (speechRecognitionActive) {
+      try {
+        ExpoSpeechRecognitionModule.stop();
+        speechRecognitionActive = false;
+      } catch (e) {
+        console.log('Error stopping speech recognition:', e);
+      }
+    }
+    
     await currentRecording.stopAndUnloadAsync();
     const uri = currentRecording.getURI();
     
@@ -113,9 +198,12 @@ export async function cancelRecording(): Promise<void> {
     }
     
     currentRecording = null;
+    transcriptAccumulator = '';
   } catch (error) {
     console.error('Failed to cancel recording:', error);
     currentRecording = null;
+    speechRecognitionActive = false;
+    transcriptAccumulator = '';
   }
 }
 
@@ -128,4 +216,3 @@ export function generateRecordingId(): string {
 export function generateEntityId(): string {
   return `ent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
-

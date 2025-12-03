@@ -10,12 +10,15 @@
     "splash": {
       "backgroundColor": "#0A0A0F"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.voicenotesai.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "VoiceNotes AI needs microphone access to record your voice notes."
+        "NSMicrophoneUsageDescription": "VoiceNotes AI needs microphone access to record your voice notes.",
+        "NSSpeechRecognitionUsageDescription": "VoiceNotes AI uses speech recognition to transcribe your voice notes."
       }
     },
     "android": {
@@ -23,11 +26,17 @@
         "backgroundColor": "#0A0A0F"
       },
       "package": "com.voicenotesai.app",
-      "permissions": ["android.permission.RECORD_AUDIO"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro"
     },
-    "plugins": ["expo-router", "expo-sqlite"]
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-speech-recognition"
+    ]
   }
 }

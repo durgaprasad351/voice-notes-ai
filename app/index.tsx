@@ -31,6 +31,7 @@ export default function HomeScreen() {
     lastTranscript,
     lastExtraction,
     error,
+    liveTranscript,
     setApiKey,
     handleStartRecording,
     handleStopRecording,
@@ -150,6 +151,7 @@ export default function HomeScreen() {
           isProcessing={isProcessing}
           onPress={handleRecordPress}
           disabled={!apiKey}
+          liveTranscript={liveTranscript}
         />
       </View>
       

@@ -5,17 +5,18 @@ import {
   getActiveEntities, 
   getUpcomingItems, 
   createEntity, 
-  updateEntity, 
   markEntityComplete,
   getEntitiesByType,
   deleteEntity,
-  getAllEntities,
 } from '../services/database';
-import { initOpenAI, processRecording } from '../services/openai';
+import { initOpenAI, processRecording, extractEntities, transcribeAudio } from '../services/openai';
 import { setupAudio, startRecording, stopRecording, generateEntityId } from '../services/audio';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_KEY_STORAGE = 'openai_api_key';
+const TRANSCRIPTION_MODE_KEY = 'transcription_mode';
+
+export type TranscriptionMode = 'on-device' | 'whisper' | 'hybrid';
 
 interface AppContextType {
   // State
@@ -28,9 +29,12 @@ interface AppContextType {
   lastTranscript: string | null;
   lastExtraction: LLMExtractionResult | null;
   error: string | null;
+  liveTranscript: string;
+  transcriptionMode: TranscriptionMode;
   
   // Actions
   setApiKey: (key: string) => Promise<void>;
+  setTranscriptionMode: (mode: TranscriptionMode) => Promise<void>;
   refreshData: () => Promise<void>;
   handleStartRecording: () => Promise<void>;
   handleStopRecording: () => Promise<void>;
@@ -52,6 +56,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [lastTranscript, setLastTranscript] = useState<string | null>(null);
   const [lastExtraction, setLastExtraction] = useState<LLMExtractionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [transcriptionMode, setTranscriptionModeState] = useState<TranscriptionMode>('hybrid');
   
   // Initialize app
   useEffect(() => {
@@ -63,8 +69,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Setup audio permissions
         await setupAudio();
         
-        // Load saved API key or use hardcoded default
-        const savedKey = await AsyncStorage.getItem(API_KEY_STORAGE);
+        // Load saved settings
+        const [savedKey, savedMode] = await Promise.all([
+          AsyncStorage.getItem(API_KEY_STORAGE),
+          AsyncStorage.getItem(TRANSCRIPTION_MODE_KEY),
+        ]);
+        
         if (savedKey) {
           setApiKeyState(savedKey);
           initOpenAI(savedKey);
@@ -72,6 +82,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           // Auto-initialize with hardcoded key
           setApiKeyState('configured');
           initOpenAI();
+        }
+        
+        if (savedMode) {
+          setTranscriptionModeState(savedMode as TranscriptionMode);
         }
         
         // Load initial data
@@ -99,6 +113,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     initOpenAI(key);
   }, []);
   
+  // Save and set transcription mode
+  const setTranscriptionMode = useCallback(async (mode: TranscriptionMode) => {
+    await AsyncStorage.setItem(TRANSCRIPTION_MODE_KEY, mode);
+    setTranscriptionModeState(mode);
+  }, []);
+  
   // Refresh data from database
   const refreshData = useCallback(async () => {
     try {
@@ -113,17 +133,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
   
+  // Handle live transcript updates
+  const handleTranscriptUpdate = useCallback((text: string) => {
+    setLiveTranscript(text);
+  }, []);
+  
   // Start recording
   const handleStartRecording = useCallback(async () => {
     try {
       setError(null);
-      await startRecording();
+      setLiveTranscript('');
+      
+      // Start recording with real-time transcription callback
+      await startRecording(
+        transcriptionMode !== 'whisper' ? handleTranscriptUpdate : undefined
+      );
       setIsRecording(true);
     } catch (err) {
       console.error('Failed to start recording:', err);
       setError('Failed to start recording');
     }
-  }, []);
+  }, [transcriptionMode, handleTranscriptUpdate]);
   
   // Stop recording and process
   const handleStopRecording = useCallback(async () => {
@@ -137,17 +167,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsProcessing(true);
       setError(null);
       
-      // Stop recording and get audio
+      // Stop recording and get audio + on-device transcript
       const result = await stopRecording();
       if (!result) {
         throw new Error('No recording to process');
       }
       
-      // Process with OpenAI
-      const { transcript, extraction } = await processRecording(result.uri);
+      let transcript: string;
+      
+      // Determine which transcript to use based on mode
+      if (transcriptionMode === 'on-device' && result.onDeviceTranscript) {
+        // Use on-device transcript only
+        transcript = result.onDeviceTranscript;
+        console.log('Using on-device transcript:', transcript);
+      } else if (transcriptionMode === 'whisper') {
+        // Use Whisper only
+        transcript = await transcribeAudio(result.uri);
+        console.log('Using Whisper transcript:', transcript);
+      } else {
+        // Hybrid mode: use on-device if available, otherwise Whisper
+        if (result.onDeviceTranscript && result.onDeviceTranscript.length > 10) {
+          transcript = result.onDeviceTranscript;
+          console.log('Hybrid: using on-device transcript:', transcript);
+        } else {
+          transcript = await transcribeAudio(result.uri);
+          console.log('Hybrid: falling back to Whisper:', transcript);
+        }
+      }
+      
+      // Extract entities using GPT
+      const extraction = await extractEntities(transcript);
       
       setLastTranscript(transcript);
       setLastExtraction(extraction);
+      setLiveTranscript('');
       
       // Save extracted entities to database
       const now = new Date().toISOString();
@@ -182,7 +235,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsProcessing(false);
     }
-  }, [apiKey, refreshData]);
+  }, [apiKey, refreshData, transcriptionMode]);
   
   // Complete an entity
   const completeEntity = useCallback(async (id: string) => {
@@ -228,7 +281,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         lastTranscript,
         lastExtraction,
         error,
+        liveTranscript,
+        transcriptionMode,
         setApiKey,
+        setTranscriptionMode,
         refreshData,
         handleStartRecording,
         handleStopRecording,
@@ -250,4 +306,3 @@ export function useApp(): AppContextType {
   }
   return context;
 }
-

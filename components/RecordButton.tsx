@@ -14,13 +14,15 @@ interface RecordButtonProps {
   isProcessing: boolean;
   onPress: () => void;
   disabled?: boolean;
+  liveTranscript?: string;
 }
 
 export function RecordButton({ 
   isRecording, 
   isProcessing, 
   onPress, 
-  disabled 
+  disabled,
+  liveTranscript,
 }: RecordButtonProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -121,6 +123,16 @@ export function RecordButton({
             ? 'Tap to stop' 
             : 'Tap to speak'}
       </Text>
+      
+      {/* Live transcript display */}
+      {isRecording && liveTranscript ? (
+        <View style={styles.liveTranscriptContainer}>
+          <Text style={styles.liveTranscriptLabel}>Live:</Text>
+          <Text style={styles.liveTranscriptText} numberOfLines={3}>
+            {liveTranscript}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -177,6 +189,29 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     color: colors.textSecondary,
     fontWeight: '500',
+  },
+  liveTranscriptContainer: {
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 12,
+    maxWidth: 300,
+    minHeight: 60,
+  },
+  liveTranscriptLabel: {
+    fontSize: typography.sizes.xs,
+    color: colors.success,
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  liveTranscriptText: {
+    fontSize: typography.sizes.md,
+    color: colors.textPrimary,
+    fontStyle: 'italic',
+    lineHeight: typography.sizes.md * 1.4,
   },
 });
 

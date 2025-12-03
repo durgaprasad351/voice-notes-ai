@@ -9,11 +9,32 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { useApp } from '../context/AppContext';
+import { useApp, TranscriptionMode } from '../context/AppContext';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
 
+const TRANSCRIPTION_MODES: { key: TranscriptionMode; label: string; description: string; icon: string }[] = [
+  { 
+    key: 'hybrid', 
+    label: 'Hybrid (Recommended)', 
+    description: 'Uses on-device when available, falls back to Whisper',
+    icon: '🔄',
+  },
+  { 
+    key: 'on-device', 
+    label: 'On-Device Only', 
+    description: 'Free, fast, works offline. Requires dev build.',
+    icon: '📱',
+  },
+  { 
+    key: 'whisper', 
+    label: 'Whisper Only', 
+    description: 'Best accuracy, requires internet. ~$0.006/min',
+    icon: '☁️',
+  },
+];
+
 export default function SettingsScreen() {
-  const { apiKey, setApiKey } = useApp();
+  const { apiKey, setApiKey, transcriptionMode, setTranscriptionMode } = useApp();
   const [showApiKey, setShowApiKey] = useState(false);
   const [editingKey, setEditingKey] = useState(false);
   const [newApiKey, setNewApiKey] = useState('');
@@ -32,12 +53,63 @@ export default function SettingsScreen() {
     return key.substring(0, 4) + '••••••••' + key.substring(key.length - 4);
   };
   
+  const handleModeChange = async (mode: TranscriptionMode) => {
+    await setTranscriptionMode(mode);
+    
+    if (mode === 'on-device') {
+      Alert.alert(
+        'Development Build Required',
+        'On-device speech recognition requires a development build. It won\'t work in Expo Go.\n\nRun: npx expo prebuild && npx expo run:ios',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+  
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
+        {/* Transcription Mode Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Speech Recognition</Text>
+          
+          <View style={styles.card}>
+            {TRANSCRIPTION_MODES.map((mode) => (
+              <TouchableOpacity
+                key={mode.key}
+                style={[
+                  styles.modeOption,
+                  transcriptionMode === mode.key && styles.modeOptionActive,
+                ]}
+                onPress={() => handleModeChange(mode.key)}
+              >
+                <View style={styles.modeHeader}>
+                  <Text style={styles.modeIcon}>{mode.icon}</Text>
+                  <View style={styles.modeTextContainer}>
+                    <Text style={[
+                      styles.modeLabel,
+                      transcriptionMode === mode.key && styles.modeLabelActive,
+                    ]}>
+                      {mode.label}
+                    </Text>
+                    <Text style={styles.modeDescription}>{mode.description}</Text>
+                  </View>
+                  <View style={[
+                    styles.radioOuter,
+                    transcriptionMode === mode.key && styles.radioOuterActive,
+                  ]}>
+                    {transcriptionMode === mode.key && (
+                      <View style={styles.radioInner} />
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+        
         {/* API Key Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>OpenAI Configuration</Text>
@@ -120,12 +192,15 @@ export default function SettingsScreen() {
           <View style={styles.card}>
             <View style={styles.aboutItem}>
               <Text style={styles.aboutLabel}>Version</Text>
-              <Text style={styles.aboutValue}>1.0.0</Text>
+              <Text style={styles.aboutValue}>1.1.0</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.aboutItem}>
               <Text style={styles.aboutLabel}>Speech-to-Text</Text>
-              <Text style={styles.aboutValue}>OpenAI Whisper</Text>
+              <Text style={styles.aboutValue}>
+                {transcriptionMode === 'whisper' ? 'OpenAI Whisper' : 
+                 transcriptionMode === 'on-device' ? 'Apple/Android' : 'Hybrid'}
+              </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.aboutItem}>
@@ -137,12 +212,13 @@ export default function SettingsScreen() {
         
         {/* Data Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data</Text>
+          <Text style={styles.sectionTitle}>Data & Privacy</Text>
           
           <View style={styles.card}>
             <Text style={styles.dataNote}>
-              All your data is stored locally on your device. Voice recordings are sent 
-              to OpenAI for processing and are not stored on their servers.
+              {transcriptionMode === 'on-device' 
+                ? '🔒 On-device mode: Audio is processed locally and never leaves your device. Only the text transcript is sent to OpenAI for entity extraction.'
+                : '☁️ Cloud mode: Audio is sent to OpenAI Whisper for transcription, then text is processed by GPT. OpenAI does not store your data.'}
             </Text>
           </View>
         </View>
@@ -180,6 +256,62 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
   },
+  // Mode selection styles
+  modeOption: {
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  modeOptionActive: {
+    backgroundColor: colors.accent + '10',
+    marginHorizontal: -spacing.lg,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+    borderBottomColor: 'transparent',
+  },
+  modeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modeIcon: {
+    fontSize: 24,
+    marginRight: spacing.md,
+  },
+  modeTextContainer: {
+    flex: 1,
+  },
+  modeLabel: {
+    fontSize: typography.sizes.md,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  modeLabelActive: {
+    color: colors.accent,
+  },
+  modeDescription: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+  },
+  radioOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOuterActive: {
+    borderColor: colors.accent,
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.accent,
+  },
+  // Card header styles
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -311,4 +443,3 @@ const styles = StyleSheet.create({
     lineHeight: typography.sizes.md * typography.lineHeights.relaxed,
   },
 });
-
