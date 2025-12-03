@@ -49,8 +49,7 @@ export default function RootLayout() {
           }} 
         />
       </Stack>
-      </AppProvider>
-    </LLMProvider>
+    </AppProvider>
   );
 }
 
