@@ -1,0 +1,30 @@
+# Xcode Cloud Configuration for NoteOnGo AI
+# This file specifies build settings for Xcode Cloud
+
+version: 1
+
+# Specify the correct workspace and scheme
+build:
+  workspace: ios/NoteOnGoAI.xcworkspace
+  scheme: NoteOnGoAI
+  
+  # Environment variables
+  environment:
+    - name: LANG
+      value: en_US.UTF-8
+    - name: LC_ALL
+      value: en_US.UTF-8
+    - name: NODE_VERSION
+      value: "20"
+  
+  # Build configuration
+  configuration: Release
+  
+  # Archive settings
+  archive:
+    exportMethod: app-store
+
+# Scripts to run
+scripts:
+  postClone: ci_scripts/ci_post_clone.sh
+
