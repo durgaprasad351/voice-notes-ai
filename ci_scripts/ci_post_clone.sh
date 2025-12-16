@@ -14,17 +14,9 @@ cd ..
 echo "📦 Installing npm dependencies..."
 npm ci
 
-# Install Expo CLI
-echo "📦 Installing Expo CLI..."
-npm install -g expo-cli
-
 # Set locale for CocoaPods
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-
-# Generate iOS project if it doesn't exist
-echo "🏗️ Generating iOS project..."
-npx expo prebuild --platform ios --clean
 
 # Install CocoaPods dependencies
 echo "📦 Installing CocoaPods..."

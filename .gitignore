@@ -7,8 +7,14 @@ dist/
 web-build/
 
 # Native build folders
-ios/
+# ios/ - Commented out for Xcode Cloud support
 android/
+
+# iOS build artifacts (keep project, ignore builds)
+ios/build/
+ios/Pods/
+ios/**/*.xcuserdata/
+ios/.xcode.env.local
 
 # Environment
 .env
