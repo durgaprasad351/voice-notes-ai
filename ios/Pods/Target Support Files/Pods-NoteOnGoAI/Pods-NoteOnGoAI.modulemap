@@ -1,0 +1,6 @@
+module Pods_NoteOnGoAI {
+  umbrella header "Pods-NoteOnGoAI-umbrella.h"
+
+  export *
+  module * { export * }
+}

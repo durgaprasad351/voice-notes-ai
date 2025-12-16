@@ -12,7 +12,7 @@ android/
 
 # iOS build artifacts (keep project, ignore builds)
 ios/build/
-ios/Pods/
+# ios/Pods/ - Temporarily commit Pods for Xcode Cloud
 ios/**/*.xcuserdata/
 ios/.xcode.env.local
 
