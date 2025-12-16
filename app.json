@@ -39,6 +39,12 @@
       "expo-router",
       "expo-sqlite",
       "expo-speech-recognition"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0d2d89c9-8793-45f8-8d99-89454ce35cda"
+      }
+    }
   }
 }
