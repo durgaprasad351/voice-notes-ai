@@ -1,31 +1,34 @@
 {
   "expo": {
-    "name": "VoiceNotes AI",
-    "slug": "voice-notes-ai",
+    "name": "NoteOnGo AI",
+    "slug": "noteon-go-ai",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "voicenotesai",
+    "scheme": "noteongo",
     "newArchEnabled": true,
     "splash": {
-      "backgroundColor": "#0A0A0F"
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.voicenotesai.app",
+      "bundleIdentifier": "com.noteongoai.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "VoiceNotes AI needs microphone access to record your voice notes.",
-        "NSSpeechRecognitionUsageDescription": "VoiceNotes AI uses speech recognition to transcribe your voice notes."
+        "NSMicrophoneUsageDescription": "NoteOnGo AI needs microphone access to record your voice notes.",
+        "NSSpeechRecognitionUsageDescription": "NoteOnGo AI uses speech recognition to transcribe your voice notes."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0A0A0F"
+        "backgroundColor": "#FFFFFF"
       },
-      "package": "com.voicenotesai.app",
+      "package": "com.noteongoai.app",
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ]

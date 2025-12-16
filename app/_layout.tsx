@@ -1,13 +1,27 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AppProvider } from '../context/AppContext';
+import { AppProvider, useApp } from '../context/AppContext';
 import { colors } from '../constants/theme';
+import { VoiceNoteModal } from '../components/VoiceNoteModal';
+
+function GlobalUI() {
+  const { activeVoiceNoteId, closeVoiceNote } = useApp();
+  
+  return (
+    <VoiceNoteModal 
+      visible={!!activeVoiceNoteId}
+      voiceNoteId={activeVoiceNoteId}
+      onClose={closeVoiceNote}
+    />
+  );
+}
 
 export default function RootLayout() {
   return (
     <AppProvider>
       <StatusBar style="light" />
+      <GlobalUI />
       <Stack
         screenOptions={{
           headerStyle: {

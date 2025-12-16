@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteOnGo AI - App Icon Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        h1 {
+            color: #111827;
+            margin: 0;
+        }
+        
+        .instructions {
+            max-width: 600px;
+            text-align: center;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+        
+        .icon-options {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .icon-wrapper {
+            text-align: center;
+        }
+        
+        .icon-wrapper h3 {
+            margin: 15px 0 5px 0;
+            color: #111827;
+        }
+        
+        .icon-wrapper p {
+            margin: 0;
+            color: #6B7280;
+            font-size: 14px;
+        }
+        
+        canvas {
+            border-radius: 22.5%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        canvas:hover {
+            transform: scale(1.05);
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #111827;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #374151;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 NoteOnGo AI - App Icon Generator</h1>
+    <p class="instructions">
+        Click on any icon below to download it as a 1024x1024 PNG. 
+        Save it as <strong>icon.png</strong> in your assets folder.
+    </p>
+    
+    <div class="icon-options">
+        <div class="icon-wrapper">
+            <canvas id="icon1" width="1024" height="1024"></canvas>
+            <h3>Option 1: Microphone Wave</h3>
+            <p>Sound waves + microphone</p>
+            <button onclick="downloadIcon('icon1', 'noteongoai-icon-1.png')">Download</button>
+        </div>
+        
+        <div class="icon-wrapper">
+            <canvas id="icon2" width="1024" height="1024"></canvas>
+            <h3>Option 2: Clean Mic</h3>
+            <p>Minimalist microphone</p>
+            <button onclick="downloadIcon('icon2', 'noteongoai-icon-2.png')">Download</button>
+        </div>
+        
+        <div class="icon-wrapper">
+            <canvas id="icon3" width="1024" height="1024"></canvas>
+            <h3>Option 3: Note Pulse</h3>
+            <p>Note with sound pulse</p>
+            <button onclick="downloadIcon('icon3', 'noteongoai-icon-3.png')">Download</button>
+        </div>
+    </div>
+
+    <script>
+        // Option 1: Microphone with Sound Waves
+        function drawIcon1() {
+            const canvas = document.getElementById('icon1');
+            const ctx = canvas.getContext('2d');
+            const size = 1024;
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#111827');
+            gradient.addColorStop(1, '#1F2937');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Sound waves (background)
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.2)';
+            ctx.lineWidth = 12;
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                const radius = 200 + (i * 80);
+                ctx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Microphone body
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.roundRect(size / 2 - 80, size / 2 - 180, 160, 240, 80);
+            ctx.fill();
+            
+            // Microphone grille lines
+            ctx.strokeStyle = '#111827';
+            ctx.lineWidth = 8;
+            for (let i = -3; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2 - 60, 60, Math.PI * 0.2 * i - 0.3, Math.PI * 0.2 * i + 0.3);
+                ctx.stroke();
+            }
+            
+            // Microphone stand
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(size / 2 - 20, size / 2 + 60, 40, 120);
+            
+            // Microphone base
+            ctx.beginPath();
+            ctx.roundRect(size / 2 - 90, size / 2 + 160, 180, 40, 20);
+            ctx.fill();
+            
+            // Accent dot
+            ctx.fillStyle = '#F43F5E';
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2 - 140, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Option 2: Clean Minimalist Microphone
+        function drawIcon2() {
+            const canvas = document.getElementById('icon2');
+            const ctx = canvas.getContext('2d');
+            const size = 1024;
+            
+            // White background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Microphone body (black)
+            ctx.fillStyle = '#111827';
+            ctx.beginPath();
+            ctx.roundRect(size / 2 - 100, size / 2 - 220, 200, 300, 100);
+            ctx.fill();
+            
+            // Microphone grille (white circles)
+            ctx.fillStyle = '#FFFFFF';
+            const rows = 5;
+            const cols = 3;
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    ctx.beginPath();
+                    const x = size / 2 - 60 + (col * 60);
+                    const y = size / 2 - 180 + (row * 60);
+                    ctx.arc(x, y, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Microphone stand
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(size / 2 - 25, size / 2 + 80, 50, 140);
+            
+            // Microphone base
+            ctx.beginPath();
+            ctx.ellipse(size / 2, size / 2 + 220, 120, 40, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Red accent line
+            ctx.strokeStyle = '#F43F5E';
+            ctx.lineWidth = 20;
+            ctx.beginPath();
+            ctx.moveTo(size / 2 - 100, size / 2 + 50);
+            ctx.lineTo(size / 2 + 100, size / 2 + 50);
+            ctx.stroke();
+        }
+        
+        // Option 3: Note with Pulse
+        function drawIcon3() {
+            const canvas = document.getElementById('icon3');
+            const ctx = canvas.getContext('2d');
+            const size = 1024;
+            
+            // Gradient background
+            const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+            gradient.addColorStop(0, '#F43F5E');
+            gradient.addColorStop(1, '#EC4899');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Pulsing circles
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 16;
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                const radius = 180 + (i * 90);
+                ctx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Note sheet background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.roundRect(size / 2 - 180, size / 2 - 200, 360, 400, 20);
+            ctx.fill();
+            
+            // Note lines
+            ctx.strokeStyle = 'rgba(17, 24, 39, 0.1)';
+            ctx.lineWidth = 4;
+            for (let i = 0; i < 8; i++) {
+                ctx.beginPath();
+                ctx.moveTo(size / 2 - 140, size / 2 - 150 + (i * 50));
+                ctx.lineTo(size / 2 + 140, size / 2 - 150 + (i * 50));
+                ctx.stroke();
+            }
+            
+            // Microphone icon on note
+            ctx.fillStyle = '#111827';
+            ctx.beginPath();
+            ctx.roundRect(size / 2 - 50, size / 2 - 100, 100, 140, 50);
+            ctx.fill();
+            
+            // Mic stand
+            ctx.fillRect(size / 2 - 15, size / 2 + 40, 30, 60);
+            
+            // Mic base
+            ctx.beginPath();
+            ctx.ellipse(size / 2, size / 2 + 100, 60, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Sound waves on note
+            ctx.strokeStyle = '#F43F5E';
+            ctx.lineWidth = 12;
+            ctx.lineCap = 'round';
+            
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                const offset = size / 2 + 80 + (i * 30);
+                ctx.moveTo(offset, size / 2 - 40);
+                ctx.lineTo(offset + 20, size / 2 - 20);
+                ctx.lineTo(offset + 40, size / 2);
+                ctx.stroke();
+            }
+        }
+        
+        // Download function
+        function downloadIcon(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Draw all icons on load
+        window.onload = function() {
+            drawIcon1();
+            drawIcon2();
+            drawIcon3();
+        };
+        
+        // Add click to download
+        document.querySelectorAll('canvas').forEach(canvas => {
+            canvas.addEventListener('click', function() {
+                downloadIcon(this.id, `noteongoai-${this.id}.png`);
+            });
+        });
+    </script>
+</body>
+</html>
+

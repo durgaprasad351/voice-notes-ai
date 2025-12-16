@@ -33,7 +33,7 @@ export function CategoryGrid({ counts = {} as Record<EntityType, number> }: Cate
             onPress={() => router.push(`/category/${type}`)}
             activeOpacity={0.7}
           >
-            <View style={[styles.iconContainer, { backgroundColor: entityColors[type] + '20' }]}>
+            <View style={[styles.iconContainer, { backgroundColor: (entityColors[type] || colors.accent) + '20' }]}>
               <Text style={styles.icon}>{entityIcons[type]}</Text>
             </View>
             <Text style={styles.label}>{entityLabels[type]}</Text>
@@ -47,41 +47,43 @@ export function CategoryGrid({ counts = {} as Record<EntityType, number> }: Cate
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   title: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.sizes.lg,
     fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: spacing.xs,
   },
   card: {
-    width: '48%',
+    width: '23%',
     backgroundColor: colors.backgroundCard,
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     marginBottom: spacing.md,
     alignItems: 'center',
   },
   iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.md,
+    width: 68,
+    height: 68,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   icon: {
-    fontSize: 28,
+    fontSize: 32,
   },
   label: {
     fontSize: typography.sizes.md,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },

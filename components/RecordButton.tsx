@@ -6,6 +6,7 @@ import {
   Animated, 
   Text,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { colors, shadows, spacing, typography } from '../constants/theme';
 
@@ -26,6 +27,7 @@ export function RecordButton({
 }: RecordButtonProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const transcriptScrollRef = useRef<ScrollView>(null);
   
   // Pulse animation when recording
   useEffect(() => {
@@ -128,9 +130,19 @@ export function RecordButton({
       {isRecording && liveTranscript ? (
         <View style={styles.liveTranscriptContainer}>
           <Text style={styles.liveTranscriptLabel}>Live:</Text>
-          <Text style={styles.liveTranscriptText} numberOfLines={3}>
-            {liveTranscript}
-          </Text>
+          <ScrollView
+            ref={transcriptScrollRef}
+            style={styles.liveTranscriptScroll}
+            contentContainerStyle={styles.liveTranscriptContent}
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={() => {
+              transcriptScrollRef.current?.scrollToEnd({ animated: false });
+            }}
+          >
+            <Text style={styles.liveTranscriptText}>
+              {liveTranscript}
+            </Text>
+          </ScrollView>
         </View>
       ) : null}
     </View>
@@ -155,7 +167,7 @@ const styles = StyleSheet.create({
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
     borderRadius: BUTTON_SIZE / 2,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary, // Black
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.lg,
@@ -201,11 +213,17 @@ const styles = StyleSheet.create({
   },
   liveTranscriptLabel: {
     fontSize: typography.sizes.xs,
-    color: colors.success,
+    color: colors.textSecondary,
     fontWeight: '600',
     marginBottom: spacing.xs,
     textTransform: 'uppercase',
     letterSpacing: 1,
+  },
+  liveTranscriptScroll: {
+    maxHeight: 140,
+  },
+  liveTranscriptContent: {
+    paddingBottom: spacing.xs,
   },
   liveTranscriptText: {
     fontSize: typography.sizes.md,

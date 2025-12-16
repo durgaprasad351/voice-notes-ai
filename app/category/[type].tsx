@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   FlatList, 
+  SectionList,
   SafeAreaView,
 } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
@@ -11,10 +12,11 @@ import { useApp } from '../../context/AppContext';
 import { EntityCard } from '../../components/EntityCard';
 import { colors, spacing, typography, entityColors, entityIcons, entityLabels } from '../../constants/theme';
 import { Entity, EntityType } from '../../types';
+import { format, parseISO, isValid, isToday, isTomorrow } from 'date-fns';
 
 export default function CategoryScreen() {
   const { type } = useLocalSearchParams<{ type: EntityType }>();
-  const { getEntitiesOfType, completeEntity, removeEntity } = useApp();
+  const { getEntitiesOfType, completeEntity, removeEntity, openVoiceNote } = useApp();
   const [entities, setEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -34,6 +36,11 @@ export default function CategoryScreen() {
     setEntities(prev => prev.filter(e => e.id !== id));
   };
   
+  const handleDelete = async (id: string) => {
+    await removeEntity(id);
+    setEntities(prev => prev.filter(e => e.id !== id));
+  };
+  
   const icon = type ? entityIcons[type] : '📌';
   const label = type ? entityLabels[type] : 'Items';
   const color = type ? entityColors[type] : colors.accent;
@@ -42,9 +49,58 @@ export default function CategoryScreen() {
     <EntityCard
       entity={item}
       onComplete={() => handleComplete(item.id)}
-      onDelete={() => removeEntity(item.id)}
+      onDelete={() => handleDelete(item.id)}
+      onViewSource={openVoiceNote}
     />
   );
+
+  // Grouped sections for Events
+  const sections = useMemo(() => {
+    if (type !== 'event') return [];
+
+    const groups: Record<string, Entity[]> = {};
+    
+    entities.forEach(item => {
+      let dateKey = 'Undated';
+      if ('eventDate' in item && item.eventDate) {
+        dateKey = item.eventDate;
+      }
+      
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(item);
+    });
+
+    return Object.keys(groups)
+      .sort((a, b) => {
+        if (a === 'Undated') return 1;
+        if (b === 'Undated') return -1;
+        return a.localeCompare(b);
+      })
+      .map(dateKey => ({
+        title: dateKey,
+        data: groups[dateKey]
+      }));
+  }, [entities, type]);
+
+  const renderSectionHeader = ({ section: { title } }: { section: { title: string } }) => {
+    let displayTitle = title;
+    if (title !== 'Undated') {
+      try {
+        const date = parseISO(title);
+        if (isValid(date)) {
+          if (isToday(date)) displayTitle = 'Today';
+          else if (isTomorrow(date)) displayTitle = 'Tomorrow';
+          else displayTitle = format(date, 'EEEE, MMM d');
+        }
+      } catch (e) {}
+    }
+
+    return (
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{displayTitle}</Text>
+      </View>
+    );
+  };
   
   return (
     <>
@@ -68,6 +124,16 @@ export default function CategoryScreen() {
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Loading...</Text>
           </View>
+        ) : type === 'event' && sections.length > 0 ? (
+          <SectionList
+            sections={sections}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            renderSectionHeader={renderSectionHeader}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            stickySectionHeadersEnabled={false}
+          />
         ) : (
           <FlatList
             data={entities}
@@ -127,6 +193,16 @@ const styles = StyleSheet.create({
   listContent: {
     padding: spacing.md,
     paddingBottom: spacing.xxl,
+  },
+  sectionHeader: {
+    backgroundColor: colors.background,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  sectionTitle: {
+    fontSize: typography.sizes.lg,
+    fontWeight: '700',
+    color: colors.textPrimary,
   },
   emptyContainer: {
     alignItems: 'center',

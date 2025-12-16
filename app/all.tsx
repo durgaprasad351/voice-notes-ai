@@ -25,7 +25,7 @@ const FILTER_OPTIONS: Array<{ key: EntityType | 'all'; label: string }> = [
 ];
 
 export default function AllItemsScreen() {
-  const { entities, completeEntity, removeEntity } = useApp();
+  const { entities, completeEntity, removeEntity, openVoiceNote } = useApp();
   const [selectedFilter, setSelectedFilter] = useState<EntityType | 'all'>('all');
   const [showCompleted, setShowCompleted] = useState(false);
   
@@ -50,6 +50,7 @@ export default function AllItemsScreen() {
       entity={item}
       onComplete={() => completeEntity(item.id)}
       onDelete={() => removeEntity(item.id)}
+      onViewSource={openVoiceNote}
     />
   );
   

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteOnGo AI - App Icon</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        h1 {
+            color: #111827;
+            margin: 0;
+        }
+        
+        .preview {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .icon-container {
+            text-align: center;
+        }
+        
+        canvas {
+            border-radius: 22.5%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .small-preview {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+        }
+        
+        .small-preview canvas {
+            border-radius: 18%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        button {
+            padding: 16px 32px;
+            background: #5B67F7;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(91, 103, 247, 0.4);
+        }
+        
+        button:hover {
+            background: #4A56E6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(91, 103, 247, 0.5);
+        }
+        
+        .instructions {
+            max-width: 600px;
+            text-align: center;
+            color: #6B7280;
+            line-height: 1.6;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+        }
+        
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #5B67F7;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎙️ NoteOnGo AI - App Icon</h1>
+    
+    <div class="preview">
+        <div class="icon-container">
+            <canvas id="mainIcon" width="1024" height="1024"></canvas>
+            <button onclick="downloadIcon()">💾 Download Icon (1024x1024)</button>
+        </div>
+        
+        <div class="small-preview">
+            <div>
+                <canvas id="smallIcon" width="180" height="180"></canvas>
+                <p style="text-align: center; margin: 10px 0 0 0; color: #6B7280; font-size: 12px;">180x180</p>
+            </div>
+            <div>
+                <canvas id="tinyIcon" width="60" height="60"></canvas>
+                <p style="text-align: center; margin: 10px 0 0 0; color: #6B7280; font-size: 12px;">60x60</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3 style="color: #111827; margin-top: 0;">📱 Installation Instructions</h3>
+        <ol style="text-align: left; color: #374151;">
+            <li>Click the <strong>"Download Icon"</strong> button above</li>
+            <li>Save the file as <code>icon.png</code></li>
+            <li>Move it to: <code>voice-notes-ai/assets/icon.png</code></li>
+            <li>Run: <code>npx expo prebuild --clean</code></li>
+            <li>Rebuild your app!</li>
+        </ol>
+    </div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Gradient background (Blue to Purple)
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#5B67F7');   // Blue
+            gradient.addColorStop(0.5, '#7B68EE'); // Medium Purple
+            gradient.addColorStop(1, '#9B59D9');   // Purple
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Speech bubble
+            const bubbleSize = size * 0.65;
+            const bubbleX = (size - bubbleSize) / 2;
+            const bubbleY = size * 0.15;
+            const bubbleRadius = bubbleSize * 0.15;
+            
+            // Main bubble body
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.roundRect(bubbleX, bubbleY, bubbleSize, bubbleSize * 0.85, bubbleRadius);
+            ctx.fill();
+            
+            // Speech bubble tail (bottom left)
+            ctx.beginPath();
+            const tailSize = size * 0.08;
+            const tailX = bubbleX + bubbleSize * 0.2;
+            const tailY = bubbleY + bubbleSize * 0.85;
+            ctx.moveTo(tailX, tailY);
+            ctx.lineTo(tailX - tailSize * 0.3, tailY + tailSize * 1.2);
+            ctx.lineTo(tailX + tailSize * 0.8, tailY);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Audio waveform inside bubble
+            const waveColor = '#1E293B'; // Dark blue/navy
+            ctx.strokeStyle = waveColor;
+            ctx.lineWidth = size * 0.045;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Center of bubble
+            const centerX = size / 2;
+            const centerY = bubbleY + (bubbleSize * 0.85) / 2;
+            
+            // Waveform path (smooth audio wave)
+            const waveWidth = bubbleSize * 0.75;
+            const waveHeight = bubbleSize * 0.5;
+            const startX = centerX - waveWidth / 2;
+            
+            ctx.beginPath();
+            
+            // Left side wave (going up)
+            ctx.moveTo(startX, centerY);
+            
+            // First peak (small)
+            ctx.bezierCurveTo(
+                startX + waveWidth * 0.05, centerY - waveHeight * 0.15,
+                startX + waveWidth * 0.1, centerY - waveHeight * 0.2,
+                startX + waveWidth * 0.15, centerY - waveHeight * 0.25
+            );
+            
+            // Down to valley
+            ctx.bezierCurveTo(
+                startX + waveWidth * 0.18, centerY - waveHeight * 0.1,
+                startX + waveWidth * 0.22, centerY + waveHeight * 0.15,
+                startX + waveWidth * 0.25, centerY + waveHeight * 0.3
+            );
+            
+            // Big peak (center-left)
+            ctx.bezierCurveTo(
+                startX + waveWidth * 0.28, centerY + waveHeight * 0.45,
+                startX + waveWidth * 0.32, centerY - waveHeight * 0.45,
+                startX + waveWidth * 0.38, centerY - waveHeight * 0.5
+            );
+            
+            // Center dip
+            ctx.bezierCurveTo(
+                startX + waveWidth * 0.42, centerY - waveHeight * 0.52,
+                startX + waveWidth * 0.48, centerY + waveHeight * 0.1,
+                startX + waveWidth * 0.5, centerY + waveHeight * 0.15
+            );
+            
+            // Big peak (center-right) - TALLEST
+            ctx.bezierCurveTo(
+                startX + waveWidth * 0.52, centerY + waveHeight * 0.2,
+                startX + waveWidth * 0.56, centerY - waveHeight * 0.55,
+                startX + waveWidth * 0.62, centerY - waveHeight * 0.58
+            );
+            
+            // Down slope
+            ctx.bezierCurveTo(
+                startX + waveWidth * 0.68, centerY - waveHeight * 0.55,
+                startX + waveWidth * 0.72, centerY + waveHeight * 0.35,
+                startX + waveWidth * 0.75, centerY + waveHeight * 0.38
+            );
+            
+            // Small rise
+            ctx.bezierCurveTo(
+                startX + waveWidth * 0.78, centerY + waveHeight * 0.4,
+                startX + waveWidth * 0.82, centerY - waveHeight * 0.15,
+                startX + waveWidth * 0.85, centerY - waveHeight * 0.2
+            );
+            
+            // Final descent
+            ctx.bezierCurveTo(
+                startX + waveWidth * 0.88, centerY - waveHeight * 0.25,
+                startX + waveWidth * 0.93, centerY - waveHeight * 0.05,
+                startX + waveWidth, centerY
+            );
+            
+            ctx.stroke();
+        }
+        
+        // Download function
+        function downloadIcon() {
+            const canvas = document.getElementById('mainIcon');
+            const link = document.createElement('a');
+            link.download = 'icon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            // Show success message
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Downloaded!';
+            btn.style.background = '#10B981';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '#5B67F7';
+            }, 2000);
+        }
+        
+        // Draw all sizes on load
+        window.onload = function() {
+            drawIcon(document.getElementById('mainIcon'), 1024);
+            drawIcon(document.getElementById('smallIcon'), 180);
+            drawIcon(document.getElementById('tinyIcon'), 60);
+        };
+        
+        // Click canvas to download too
+        document.getElementById('mainIcon').addEventListener('click', downloadIcon);
+    </script>
+</body>
+</html>
+

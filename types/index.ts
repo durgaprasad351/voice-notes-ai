@@ -20,6 +20,15 @@ export interface BaseEntity {
   updatedAt: string;
   status: EntityStatus;
   rawTranscript?: string;
+  voiceNoteId?: string;
+}
+
+export interface VoiceNote {
+  id: string;
+  transcript: string;
+  audioUri: string;
+  createdAt: string;
+  duration: number;
 }
 
 export interface NoteEntity extends BaseEntity {
