@@ -21,7 +21,14 @@
       "ios": {
         "simulator": false,
         "buildConfiguration": "Release"
-      }
+      },
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "cache": {
+        "key": "production-v1"
+      },
+      "node": "20.19.6"
     }
   },
   "submit": {
