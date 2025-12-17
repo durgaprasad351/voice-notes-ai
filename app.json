@@ -2,7 +2,7 @@
   "expo": {
     "name": "NoteOnGo AI",
     "slug": "noteon-go-ai",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -18,7 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.noteongoai.app",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "NoteOnGo AI needs microphone access to record your voice notes.",
         "NSSpeechRecognitionUsageDescription": "NoteOnGo AI uses speech recognition to transcribe your voice notes.",

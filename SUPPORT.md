@@ -61,7 +61,7 @@ Submit a feature request on [GitHub Discussions](https://github.com/durgaprasad3
 
 For other inquiries, reach out via:
 - **GitHub**: [@durgaprasad351](https://github.com/durgaprasad351)
-- **Email**: support@noteongoai.com *(replace with your email)*
+- **Email**: durgaprasadkumar@gmail.com
 
 ---
 
