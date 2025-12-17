@@ -23,7 +23,8 @@
         "NSSpeechRecognitionUsageDescription": "NoteOnGo AI uses speech recognition to transcribe your voice notes.",
         "NSPhotoLibraryUsageDescription": "NoteOnGo AI may allow you to attach images to your notes in future updates.",
         "NSPhotoLibraryAddUsageDescription": "NoteOnGo AI may allow you to save notes as images in future updates.",
-        "NSCameraUsageDescription": "NoteOnGo AI may allow you to capture images for your notes in future updates."
+        "NSCameraUsageDescription": "NoteOnGo AI may allow you to capture images for your notes in future updates.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
