@@ -6,15 +6,9 @@ node_modules/
 dist/
 web-build/
 
-# Native build folders
-# ios/ - Commented out for Xcode Cloud support
+# Native build folders (EAS Build will generate these)
+ios/
 android/
-
-# iOS build artifacts (keep project, ignore builds)
-ios/build/
-# ios/Pods/ - Temporarily commit Pods for Xcode Cloud
-ios/**/*.xcuserdata/
-ios/.xcode.env.local
 
 # Environment
 .env
