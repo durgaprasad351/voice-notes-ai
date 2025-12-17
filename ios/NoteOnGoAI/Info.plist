@@ -45,8 +45,14 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSCameraUsageDescription</key>
+    <string>NoteOnGo AI may allow you to capture images for your notes in future updates.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>NoteOnGo AI needs microphone access to record your voice notes.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>NoteOnGo AI may allow you to save notes as images in future updates.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>NoteOnGo AI may allow you to attach images to your notes in future updates.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>NoteOnGo AI uses speech recognition to transcribe your voice notes.</string>
     <key>NSUserActivityTypes</key>
